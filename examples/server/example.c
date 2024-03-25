@@ -20,7 +20,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307,
  *  USA.
  */
-
+#include <assert.h>
 #ifdef WIN32
 #define sleep Sleep
 #else
@@ -302,6 +302,24 @@ int main(int argc,char** argv)
   rfbScreen->newClientHook = newclient;
   rfbScreen->httpDir = "../webclients";
   rfbScreen->httpEnableProxyConnect = TRUE;
+
+  assert(LIBVNCSERVER_HAVE_LIBZ);
+
+  void clipboardCallback(rfbClientPtr cl, const char* text, int len, const char* clipboardType) {
+      printf("%s Clipboard content: %.*s\n", clipboardType, len, text);
+  }
+  void plainClipboardCallback(char* text, int len, rfbClientPtr cl){
+    clipboardCallback(cl, text, len, "Plain");
+  };
+
+  void richClipboardCallback(char* text, int len, rfbClientPtr cl){
+    clipboardCallback(cl, text, len, "Rich");
+  };
+
+
+
+  rfbScreen->setXCutText = plainClipboardCallback;
+  rfbScreen->setXCutTextUTF8 = richClipboardCallback;
 
   initBuffer((unsigned char*)rfbScreen->frameBuffer);
   rfbDrawString(rfbScreen,&radonFont,20,100,"Hello, World!",0xffffff);
